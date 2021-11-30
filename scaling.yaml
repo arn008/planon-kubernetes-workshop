@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: playground-scaling
+  labels:
+    app: app-scaling
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app-scaling
+  template:
+    metadata:
+      labels:
+        app: app-scaling
+    spec:
+      containers:
+      - name: playground-scaling
+        image: rubenernst/kubernetes-playground:1.0.2
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            cpu: "200m"
+            memory: "800Mi"            
+          requests:
+            cpu: "200m"
+            memory: "375Mi"            
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: playground-scaling-service
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: internal
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+    external-dns.alpha.kubernetes.io/hostname: casper-service.k8s-training.aws-tests.skyworkz.nl.
+spec:
+  selector:
+    app: app-scaling
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: LoadBalancer  
